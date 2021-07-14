@@ -188,7 +188,7 @@ tpsolepredict$year<-sole_only$year
 tpsolepredict<-as.data.frame(tpsolepredict)
 
 tpsolefig<- ggplot() + geom_line(data =tpsolepredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tpsolepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#00529c", alpha=0.3) + geom_point(data = sole_only, aes(x = year, y = tp), color="#00529c") +  xlab("Year collected") + ylab("tp") +theme_classic()
+  geom_ribbon(data = tpsolepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="darkorchid4", alpha=0.3) + geom_point(data = sole_only, aes(x = year, y = tp), color="darkorchid4") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
 
 
 
@@ -243,7 +243,7 @@ tphakepredict$year<-hake_only$year
 tphakepredict<-as.data.frame(tphakepredict)
 
 tphakefig<- ggplot() + geom_line(data =tphakepredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tphakepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#00529c", alpha=0.3) + geom_point(data = hake_only, aes(x = year, y = tp), color="#00529c") +  xlab("Year collected") + ylab("tp") +theme_classic()
+  geom_ribbon(data = tphakepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="darkorchid4", alpha=0.3) + geom_point(data = hake_only, aes(x = year, y = tp), color="darkorchid4") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
 
 #Analyses for only pollock
 pollock_only<-allspp%>%
@@ -294,7 +294,7 @@ tppollockpredict$year<-pollock_only$year
 tppollockpredict<-as.data.frame(tppollockpredict)
 
 tppollockfig<- ggplot() + geom_line(data =tppollockpredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tppollockpredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#00529c", alpha=0.3) + geom_point(data = pollock_only, aes(x = year, y = tp), color="#00529c") +  xlab("Year collected") + ylab("tp") +theme_classic()
+  geom_ribbon(data = tppollockpredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="darkorchid4", alpha=0.3) + geom_point(data = pollock_only, aes(x = year, y = tp), color="darkorchid4") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
 
 #Analyses for only herring
 herring_only<-allspp%>%
@@ -363,7 +363,7 @@ tppredict$year<-herring_only2$year
 tppredict<-as.data.frame(tppredict)
 
 tpherringfig<- ggplot() + geom_line(data =tppredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#00529c", alpha=0.3) + geom_point(data = herring_only, aes(x = year, y = tp), color="#00529c") +  xlab("Year collected") + ylab("tp") +theme_classic()
+  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="darkorchid4", alpha=0.3) + geom_point(data = herring_only, aes(x = year, y = tp), color="darkorchid4") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
 
 
 
@@ -413,7 +413,7 @@ tppredict$year<-rock_only$year
 tppredict<-as.data.frame(tppredict)
 
 tplot1rock<- ggplot() + geom_line(data =tppredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#00529c", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = tp), color="#00529c") +  xlab("Year collected") + ylab("tp") +theme_classic()
+  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="darkorchid4", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = tp), color="darkorchid4") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
 
 #make figure for glu
 predict(glurock, rock_only, allow.new.levels=TRUE)
@@ -426,7 +426,7 @@ glupredict$year<-rock_only$year
 glupredict<-as.data.frame(glupredict)
 
 gluplot1rock<- ggplot() + geom_line(data =glupredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = glupredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#00529c", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = glu), color="#00529c") +  xlab("Year collected") + ylab("glu") +theme_classic()
+  geom_ribbon(data = glupredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="olivedrab", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = glu), color="olivedrab") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
 
 #make figure for phe
 predict(pherock, rock_only, allow.new.levels=TRUE)
@@ -439,18 +439,21 @@ phepredict$year<-rock_only$year
 phepredict<-as.data.frame(phepredict)
 
 pheplot1rock<- ggplot() + geom_line(data =phepredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = phepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#00529c", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = phe), color="#00529c") +  xlab("Year collected") + ylab("phe") +theme_classic()
+  geom_ribbon(data = phepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="dodgerblue3", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = phe), color="dodgerblue3") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
 
 
-ggarrange(tplot1rock,
+rockfig<-ggarrange(tplot1rock,
            ggarrange(gluplot1rock, pheplot1rock),
           nrow = 2)
-
-fig_rock_complete<-plot_grid(gluplot1rock, pheplot1rock, tplot1rock)
 ggsave("rockfig.jpg")
 
+tpfig<-ggarrange(tphakefig + theme(axis.title = element_blank() ),
+                 tppollockfig + theme(axis.title = element_blank()),
+                 tpsolefig + theme(axis.title = element_blank()),
+                 tpherringfig+ theme(axis.title = element_blank()), 
+                 nrow= 2, ncol  = 2)
 
-
+tpfigcomplete<-tpfig + labs(x = "Year collected", y = "Trophic Position")
 
 #make data tables
 library(kableExtra)
@@ -541,11 +544,43 @@ fishstatsoverall<-allspp%>%
 write.csv(fishstats, "descriptiveresultstableoverall.csv")
 
 
-fishstats2<-allspp%>%
-  group_by(hostsp, decade)%>%
+solen<-sole_only%>%
+  group_by(decade)%>%
   summarize(
     fishcount = n_distinct(hostid, na.rm = TRUE))
+
+rockn<-rock_only%>%
+  group_by(decade)%>%
+  summarize(
+    fishcount = n_distinct(hostid, na.rm = TRUE))
+
+pollockn<-pollock_only%>%
+  group_by(decade)%>%
+  summarize(
+    fishcount = n_distinct(hostid, na.rm = TRUE))
+
+
+haken<-hake_only%>%
+  group_by(decade)%>%
+  summarize(
+    fishcount = n_distinct(hostid, na.rm = TRUE))
+
+herringn<-herring_only%>%
+  group_by(decade)%>%
+  drop_na(decade)%>%
+  summarize(
+    fishcount = n_distinct(hostid, na.rm = TRUE))
+
+
+
+
 write.csv(fishstats2, "decadesamplesize.csv")
+
+
+
+
+
+
 library(ggplot2)
 samplesizefig<- ggplot(fishstats2, aes( x= decade, y = fishcount, fill = hostsp, color=hostsp)) + geom_bar()
 
