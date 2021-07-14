@@ -1,0 +1,64 @@
+---
+title: "CSIA_AllFish_Tables"
+author: "Welicky et al."
+date: "6/29/2021"
+output:
+  word_document: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+library(dplyr)
+library(kableExtra)
+library(knitr)
+load("models.Rdata")
+glmmTable <- function(glmmTMBobject, AAtype, filename){
+  rawtab <- summary(glmmTMBobject)$coefficients$cond
+  rownames(rawtab) <- c("Intercept","scale(year)", "scale(sl)")
+  # Making the table
+  rawtab[c(2:3),c(1:4)] %>% 
+    kbl(col.names = c("Estimate", "Standard Error", "z-value","p-value"), 
+        digits=c(3,3,3,3), 
+        align = "c") %>% 
+    kable_styling(full_width = FALSE, 
+                  html_font = "Times New Roman") %>% 
+    save_kable(file = filename, self_contained = T) 
+}
+
+glmmTable(glusole,"Glu_Sole", "glu_sole.html")
+glmmTable(phesole,"Phe_Sole", "phe_sole.html")
+glmmTable(tpsole,"TP_Sole", "tp_sole.html")
+glmmTable(gluhake,"Glu_Hake", "glu_hake.html")
+glmmTable(phehake,"Phe_Hake", "phe_hake.html")
+glmmTable(tphake,"TP_Hake", "tp_hake.html")
+glmmTable(glupollock,"Glu_pollock", "glu_pollock.html")
+glmmTable(phepollock,"Phe_pollock", "phe_pollock.html")
+glmmTable(tppollock,"TP_pollock", "tp_pollock.html")
+glmmTable(gluherring,"Glu_herring", "glu_herring.html")
+glmmTable(pheherring,"Phe_herring", "phe_herring.html")
+glmmTable(tpherring,"TP_herring", "tp_herring.html")
+glmmTable(glurock,"Glu_rock", "glu_rock.html")
+glmmTable(pherock,"Phe_rock", "phe_rock.html")
+glmmTable(tprock,"TP_rock", "tp_rock.html")
+```
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
