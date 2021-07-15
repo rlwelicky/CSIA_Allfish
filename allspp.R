@@ -390,7 +390,7 @@ pherock<-glmmTMB(phe~ scale(year) + scale(sl) +(1|site) , family = "gaussian", d
 summary(pherock)
 
 
-
+library(glmmTMB)
 normalitytp<-glm(tp~year, data = rock_only)
 resrock<-simulateResiduals(fittedModel = normalitytp, n = 250)
 resrock$scaledResiduals
@@ -413,7 +413,7 @@ tppredict$year<-rock_only$year
 tppredict<-as.data.frame(tppredict)
 
 tplot1rock<- ggplot() + geom_line(data =tppredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="darkorchid4", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = tp), color="darkorchid4") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
+  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="darkorchid4", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = tp), color="darkorchid4") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic() + theme(axis.title.x = element_blank())
 
 #make figure for glu
 predict(glurock, rock_only, allow.new.levels=TRUE)
@@ -426,7 +426,7 @@ glupredict$year<-rock_only$year
 glupredict<-as.data.frame(glupredict)
 
 gluplot1rock<- ggplot() + geom_line(data =glupredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = glupredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="olivedrab", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = glu), color="olivedrab") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
+  geom_ribbon(data = glupredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="olivedrab", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = glu), color="olivedrab") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic() + theme(axis.title.x = element_blank())
 
 #make figure for phe
 predict(pherock, rock_only, allow.new.levels=TRUE)
@@ -439,21 +439,26 @@ phepredict$year<-rock_only$year
 phepredict<-as.data.frame(phepredict)
 
 pheplot1rock<- ggplot() + geom_line(data =phepredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = phepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="dodgerblue3", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = phe), color="dodgerblue3") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
+  geom_ribbon(data = phepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="dodgerblue3", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = phe), color="dodgerblue3") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic() +  theme(axis.title.x = element_blank())
+
+library(patchwork)
+rockfig<-tplot1rock| gluplot1rock / pheplot1rock 
+ggsave("fig3.jpg")
 
 
-rockfig<-ggarrange(tplot1rock,
-           ggarrange(gluplot1rock, pheplot1rock),
-          nrow = 2)
-ggsave("rockfig.jpg")
-
-tpfig<-ggarrange(tphakefig + theme(axis.title = element_blank() ),
-                 tppollockfig + theme(axis.title = element_blank()),
-                 tpsolefig + theme(axis.title = element_blank()),
-                 tpherringfig+ theme(axis.title = element_blank()), 
+library(ggeasy)
+tpfig<-ggarrange(tphakefig + ggtitle("Pacific Hake") + easy_center_title()
+ +theme(axis.title = element_blank() ),
+                 tppollockfig +ggtitle("Walleye Pollock")+ easy_center_title()+
+theme(axis.title = element_blank()),
+                 tpsolefig + ggtitle("English Sole")+ easy_center_title()
++theme(axis.title = element_blank()),
+                 tpherringfig+ggtitle("Pacific Herring") + easy_center_title()
++theme(axis.title = element_blank()), 
                  nrow= 2, ncol  = 2)
-
-tpfigcomplete<-tpfig + labs(x = "Year collected", y = "Trophic Position")
+library(ggpubr)
+tpfigcomplete<- annotate_figure(tpfig, top = NULL, bottom = "Year collected", left = "Trophic position")
+ggsave("figure2.jpg")                               
 
 #make data tables
 library(kableExtra)
