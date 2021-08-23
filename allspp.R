@@ -50,32 +50,6 @@ a<-allspp%>%
             averagetp = mean (tp, na.rm = TRUE))
 
 
-#lets check out how bad our distribution are...
-normalityglu<-glm(glu~year, data = allspp)
-resglu<-simulateResiduals(fittedModel = normalityglu, n = 250)
-plot(resglu)
-resglu$scaledResiduals
-testUniformity(resglu)
-#whoa, yea for normal glu! onto phe...
-normalityphe<-glm(phe~year, data = allspp)
-resphe<-simulateResiduals(fittedModel = normalityphe, n = 250)
-resphe$scaledResiduals
-plot(resphe)
-testUniformity(resphe) 
-#wow, lucky me--normal!...something will be off soon, haha. now tp...
-normalitytp<-glm(tp~year, data = allspp)
-restp<-simulateResiduals(fittedModel = normalitytp, n = 250)
-restp$scaledResiduals
-plot(restp)
-testUniformity(restp)  #well, normal : normal, is normal, expected. good.
-
-#curious about normality of the diff
-normalitydiff<-glm(diff~year, data = allspp)
-resdiff<-simulateResiduals(fittedModel = normalitydiff, n = 250)
-resdiff$scaledResiduals
-plot(resdiff)
-testUniformity(resdiff)
-
 #Are the data spatially autocorrelated?
 #spatial checks for glutamic acid, this would be the same as phe or tp, since all these values are from 1 fish from the same site; One fish didn't have a lat/long, so I removed it to run the check using a unique dataframe for the check
 #the Moran's I test cannot handle NAs, so first I'm removing all NAs from this 'mock' dataset
@@ -99,42 +73,23 @@ temporaltest.glu<-dwtest(temporal.glu, order.by = NULL, alternative = "two.sided
 temporaltest.glu #yay, no temporal corr
 dwtest(temporal.glu)
 
-#Analyses with all species in one model, no lag time of temp
-#does time influence glu?
-library(lmerTest)
-gluint<-glmmTMB(glu~ year  + hostsp +  (1|site)  , family = "gaussian", data= allspp)
-summary(gluint) #AIC 781.5; 749
-glu<-glmmTMB(glu~ year + sl + (1|hostsp)  + (1|site) , family = "gaussian", data= allspp)
-summary(glu) #AIC 748
-glulmer<-lmer(glu~ year  + hostsp +  (1|site), data= allspp)
-summary(glulmer)
-#does time influence phe?
-pheint<-glmmTMB(phe~ year + sl + hostsp  + (1|site) + lag3_temp, family = "gaussian", data= allspp)
-summary(pheint) #AIC 811;779
-phe<-glmmTMB(phe~ year  + (1|hostid)  + hostsp , family = "gaussian", data= allspp)
-summary(phe) #806;776
 
-
-#does time influence diff?
-diffint<-glmmTMB(diff~ year  + sl + (1|site) , family = "gaussian", data= allspp)
-summary(diffint) #AIC 857
-diff<-glmmTMB(diff~ year + sl + hostsp  + (1|site), family = "gaussian", data= allspp)
-summary(diff) #853
-
-#does time influence tp?
-tpint<-glmmTMB(tp~ year + hostsp + sl   +(1|site) , family = "gaussian", data= allspp)
-summary(tpint) #AIC  18
-tp<-glmmTMB(diff~ year + sl + hostsp  + (1|site), family = "gaussian", data= allspp)
-summary(tp) 
-
-ab<-glht(tpint, linfct = mcp(hostsp = "Tukey"))
-summary(ab)
 
 
 #Analyses for only Sole
 
 sole_only<-allspp%>%
   filter(hostsp == "sole")
+
+
+#what's the median sl needed for figures?
+sole_only%>%
+  summarise(
+    mediansl = median(sl)
+  )
+
+
+#SOLE GLUTAMIC ACID
 library(predictmeans)
 normalityglu<-glm(glu~year, data = sole_only)
 ressole<-simulateResiduals(fittedModel = normalityglu, n = 250)
@@ -144,11 +99,23 @@ testUniformity(ressole) #glu is normally distributed
 glusole<-glmmTMB(glu~ scale(year) + scale(sl) +(1|site)  , family = "gaussian", data= sole_only)
 summary(glusole)
 
-glusolelmer<-lmer(glu~ year + sl +(1|site), data= sole_only)
-summary(glusolelmer)
-library(visreg)
-a<-visreg(glusolelmer, "year")
-view (a)
+
+
+predict(glusole, sole_only, allow.new.levels=TRUE)
+ndglusole<-sole_only[1,]
+ndglusole$year<-"new"
+ndglusole_pop<-data.frame(year=sole_only$year, site=NA, sl = 126) 
+glusolepredict<-predict(glusole, newdata=ndglusole_pop, se.fit=TRUE)
+as.data.frame(glusolepredict)
+glusolepredict$year<-sole_only$year
+glusolepredict<-as.data.frame(glusolepredict)
+
+glusolefig<- ggplot() + geom_line(data =glusolepredict, aes(x = year, y = fit)) +
+  geom_ribbon(data = glusolepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#5445b1", alpha=0.3) + geom_point(data = sole_only, aes(x = year, y = glu), color="#5445b1") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
+
+
+#SOLE PHE
+
 normalityphe<-glm(phe~year, data = sole_only)
 ressole<-simulateResiduals(fittedModel = normalityphe, n = 250)
 ressole$scaledResiduals
@@ -159,6 +126,21 @@ phesole<-glmmTMB(phe~ scale(year) + scale(sl) +(1|site), family = "gaussian", da
 summary(phesole)
 
 
+
+predict(phesole, sole_only, allow.new.levels=TRUE)
+ndphesole<-sole_only[1,]
+ndphesole$year<-"new"
+ndphesole_pop<-data.frame(year=sole_only$year, site=NA, sl = 126) 
+phesolepredict<-predict(phesole, newdata=ndphesole_pop, se.fit=TRUE)
+as.data.frame(phesolepredict)
+phesolepredict$year<-sole_only$year
+phesolepredict<-as.data.frame(phesolepredict)
+
+phesolefig<- ggplot() + geom_line(data =phesolepredict, aes(x = year, y = fit)) +
+  geom_ribbon(data = phesolepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#5445b1", alpha=0.3) + geom_point(data = sole_only, aes(x = year, y = phe), color="#5445b1") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
+
+#SOLE TP
+
 normalitytp<-glm(tp~year, data = sole_only)
 ressole<-simulateResiduals(fittedModel = normalitytp, n = 250)
 ressole$scaledResiduals
@@ -167,35 +149,33 @@ testUniformity(ressole) #tp is normally distributed
 tpsole<-glmmTMB(tp~ scale(year) + scale(sl) +(1|site) , family = "gaussian", data= sole_only)
 summary(tpsole)
 
-diffsole<-glmmTMB(diff~ scale(year) + scale(sl) +(1|site) , family = "gaussian", data= sole_only)
-summary(diffsole)
-
-
-#make tp figure for sole
-#what's the median sl needed?
-sole_only%>%
-  summarise(
-    mediansl = median(sl)
-  )
-
 predict(tpsole, sole_only, allow.new.levels=TRUE)
 ndtpsole<-sole_only[1,]
 ndtpsole$year<-"new"
-ndtpsole_pop<-data.frame(year=sole_only$year, site=NA, sl = 126) #random effects are set to NA, other effects I chose median of climate and mean for sl
+ndtpsole_pop<-data.frame(year=sole_only$year, site=NA, sl = 126) 
 tpsolepredict<-predict(tpsole, newdata=ndtpsole_pop, se.fit=TRUE)
 as.data.frame(tpsolepredict)
 tpsolepredict$year<-sole_only$year
 tpsolepredict<-as.data.frame(tpsolepredict)
 
 tpsolefig<- ggplot() + geom_line(data =tpsolepredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tpsolepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="darkorchid4", alpha=0.3) + geom_point(data = sole_only, aes(x = year, y = tp), color="darkorchid4") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
+  geom_ribbon(data = tpsolepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#5445b1", alpha=0.3) + geom_point(data = sole_only, aes(x = year, y = tp), color="#5445b1") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
+
+
 
 
 
 #Analyses for only hake
 hake_only<-allspp%>%
   filter(hostsp == "hake")
+#find median value first = 162
 
+hake_only%>%
+  summarise(
+    mediansl = median(sl)
+  )
+
+#HAKE GLU
 normalityglu<-glm(glu~year, data = hake_only)
 reshake<-simulateResiduals(fittedModel = normalityglu, n = 250)
 reshake$scaledResiduals
@@ -204,6 +184,21 @@ testUniformity(reshake) #normal :)
 gluhake<-glmmTMB(glu~ scale(year) + scale(sl) +(1|site) , family = "gaussian", data= hake_only)
 summary(gluhake)
 
+
+
+predict(gluhake, hake_only, allow.new.levels=TRUE)
+ndgluhake<-hake_only[1,]
+ndgluhake$year<-"new"
+ndgluhake_pop<-data.frame(year=hake_only$year, site=NA, sl = 162) 
+gluhakepredict<-predict(gluhake, newdata=ndgluhake_pop, se.fit=TRUE)
+as.data.frame(gluhakepredict)
+gluhakepredict$year<-hake_only$year
+gluhakepredict<-as.data.frame(gluhakepredict)
+
+gluhakefig<- ggplot() + geom_line(data =gluhakepredict, aes(x = year, y = fit)) +
+  geom_ribbon(data = gluhakepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#f3c483", alpha=0.3) + geom_point(data = hake_only, aes(x = year, y = glu), color="#f3c483") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
+
+#HAKE PHE
 
 normalityphe<-glm(phe~year, data = hake_only)
 reshake<-simulateResiduals(fittedModel = normalityphe, n = 250)
@@ -214,6 +209,19 @@ phehake<-glmmTMB(phe~ scale(year) + scale(sl) +(1|site), family = "gaussian", da
 summary(phehake)
 
 
+predict(phehake, hake_only, allow.new.levels=TRUE)
+ndphehake<-hake_only[1,]
+ndphehake$year<-"new"
+ndphehake_pop<-data.frame(year=hake_only$year, site=NA, sl = 126) 
+phehakepredict<-predict(phehake, newdata=ndphehake_pop, se.fit=TRUE)
+as.data.frame(phehakepredict)
+phehakepredict$year<-hake_only$year
+phehakepredict<-as.data.frame(phehakepredict)
+
+phehakefig<- ggplot() + geom_line(data =phehakepredict, aes(x = year, y = fit)) +
+  geom_ribbon(data = phehakepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#f3c483", alpha=0.3) + geom_point(data = hake_only, aes(x = year, y = phe), color="#f3c483") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
+
+#HAKE TP
 normalitytp<-glm(tp~year, data = hake_only)
 reshake<-simulateResiduals(fittedModel = normalitytp, n = 250)
 reshake$scaledResiduals
@@ -222,33 +230,30 @@ testUniformity(reshake) #normal
 tphake<-glmmTMB(tp~ scale(year) + scale(sl) +(1|site), family = "gaussian", data= hake_only)
 summary(tphake)
 
-diffhake<-glmmTMB(diff~ scale(year) + scale(sl) +(1|site) , family = "gaussian", data= hake_only)
-summary(diffhake)
-
-
-#lets make a tp figure for hake;find median value first = 162
-
-hake_only%>%
-  summarise(
-    mediansl = median(sl)
-  )
 
 predict(tphake, hake_only, allow.new.levels=TRUE)
 ndtphake<-hake_only[1,]
 ndtphake$year<-"new"
-ndtphake_pop<-data.frame(year=hake_only$year, site=NA, sl = 162) #random effects are set to NA, other effects I chose median of climate and mean for sl
+ndtphake_pop<-data.frame(year=hake_only$year, site=NA, sl = 162) 
 tphakepredict<-predict(tphake, newdata=ndtphake_pop, se.fit=TRUE)
 as.data.frame(tphakepredict)
 tphakepredict$year<-hake_only$year
 tphakepredict<-as.data.frame(tphakepredict)
 
 tphakefig<- ggplot() + geom_line(data =tphakepredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tphakepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="darkorchid4", alpha=0.3) + geom_point(data = hake_only, aes(x = year, y = tp), color="darkorchid4") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
+  geom_ribbon(data = tphakepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#f3c483", alpha=0.3) + geom_point(data = hake_only, aes(x = year, y = tp), color="#f3c483") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
 
 #Analyses for only pollock
 pollock_only<-allspp%>%
   filter(hostsp == "pollock")
 
+#find median value first = 108
+pollock_only %>%
+  summarise(
+    mediansl = median(sl, na.rm = TRUE)
+  )
+
+#POLLOCK GLU
 normalityglu<-glm(glu~year, data = pollock_only)
 respollock<-simulateResiduals(fittedModel = normalityglu, n = 250)
 respollock$scaledResiduals
@@ -257,6 +262,20 @@ testUniformity(respollock) #normal
 glupollock<-glmmTMB(glu~ scale(year) + scale(sl) +(1|site), family = "gaussian", data= pollock_only)
 summary(glupollock)
 
+
+predict(glupollock, pollock_only, allow.new.levels=TRUE)
+ndglupollock<-pollock_only[1,]
+ndglupollock$year<-"new"
+ndglupollock_pop<-data.frame(year=pollock_only$year, site=NA, sl = 162) 
+glupollockpredict<-predict(glupollock, newdata=ndglupollock_pop, se.fit=TRUE)
+as.data.frame(glupollockpredict)
+glupollockpredict$year<-pollock_only$year
+glupollockpredict<-as.data.frame(glupollockpredict)
+
+glupollockfig<- ggplot() + geom_line(data =glupollockpredict, aes(x = year, y = fit)) +
+  geom_ribbon(data = glupollockpredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#5c1a33", alpha=0.3) + geom_point(data = pollock_only, aes(x = year, y = glu), color="#5c1a33") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
+
+#POLLOCK PHE
 
 normalityphe<-glm(phe~year, data = pollock_only)
 respollock<-simulateResiduals(fittedModel = normalityphe, n = 250)
@@ -267,6 +286,21 @@ phepollock<-glmmTMB(phe~ scale(year) + scale(sl) +(1|site), family = "gaussian",
 summary(phepollock)
 
 
+predict(phepollock, pollock_only, allow.new.levels=TRUE)
+ndphepollock<-pollock_only[1,]
+ndphepollock$year<-"new"
+ndphepollock_pop<-data.frame(year=pollock_only$year, site=NA, sl = 126) 
+phepollockpredict<-predict(phepollock, newdata=ndphepollock_pop, se.fit=TRUE)
+as.data.frame(phepollockpredict)
+phepollockpredict$year<-pollock_only$year
+phepollockpredict<-as.data.frame(phepollockpredict)
+
+phepollockfig<- ggplot() + geom_line(data =phepollockpredict, aes(x = year, y = fit)) +
+  geom_ribbon(data = phepollockpredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#5c1a33", alpha=0.3) + geom_point(data = pollock_only, aes(x = year, y = phe), color="#5c1a33") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
+
+
+#Polock TP
+
 normalitytp<-glm(tp~year, data = pollock_only)
 respollock<-simulateResiduals(fittedModel = normalitytp, n = 250)
 respollock$scaledResiduals
@@ -275,32 +309,31 @@ testUniformity(respollock)
 tppollock<-glmmTMB(tp~ scale(year) + scale(sl) +(1|site), family = "gaussian", data= pollock_only)
 summary(tppollock)
 
-diffpollock<-glmmTMB(diff~ scale(year) + scale(sl) +(1|site) , family = "gaussian", data= pollock_only)
-summary(diffpollock)
 
-#lets make a tp figure for pollock; find median value first = 108
-pollock_only %>%
-  summarise(
-  mediansl = median(sl, na.rm = TRUE)
-  )
 
 predict(tppollock, pollock_only, allow.new.levels=TRUE)
 ndtppollock<-pollock_only[1,]
 ndtppollock$year<-"new"
-ndtppollock_pop<-data.frame(year=pollock_only$year, site=NA, sl = 108) #random effects are set to NA, other effects I chose median of climate and mean for sl
+ndtppollock_pop<-data.frame(year=pollock_only$year, site=NA, sl = 108) 
 tppollockpredict<-predict(tppollock, newdata=ndtppollock_pop, se.fit=TRUE)
 as.data.frame(tppollockpredict)
 tppollockpredict$year<-pollock_only$year
 tppollockpredict<-as.data.frame(tppollockpredict)
 
 tppollockfig<- ggplot() + geom_line(data =tppollockpredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tppollockpredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="darkorchid4", alpha=0.3) + geom_point(data = pollock_only, aes(x = year, y = tp), color="darkorchid4") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
+  geom_ribbon(data = tppollockpredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#5c1a33", alpha=0.3) + geom_point(data = pollock_only, aes(x = year, y = tp), color="#5c1a33") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
 
 #Analyses for only herring
 herring_only<-allspp%>%
   filter(hostsp == "herring")
 
+#find median value first = 146
+herring_only %>%
+  summarise(
+    mediansl = median(sl, na.rm = TRUE)
+  )
 
+#HERRING GLU
 normalityglu<-glm(glu~year, data = herring_only)
 resherring<-simulateResiduals(fittedModel = normalityglu, n = 250)
 resherring$scaledResiduals
@@ -308,6 +341,28 @@ plot(resherring)
 testUniformity(resherring) #normal
 gluherring<-glmmTMB(glu~ scale(year) + scale(sl) +(1|site) , family = "gaussian", data= herring_only)
 summary(gluherring)
+
+
+#I can't seem to get the herring figure to work! Not "Error in eval(substitute(expr), data, enclos = parent.frame()) : 
+#NAs's causing problems, so I removed them to make the figures only!
+
+herring_only2<-herring_only %>% 
+  drop_na(site, year, sl) 
+
+
+predict(gluherring, herring_only2, allow.new.levels=TRUE)
+ndgluherring<-herring_only[1,]
+ndgluherring$year<-"new"
+ndgluherring_pop<-data.frame(year=herring_only2$year, site=NA, sl = 146) 
+gluherringpredict<-predict(gluherring, newdata=ndgluherring_pop, se.fit=TRUE)
+as.data.frame(gluherringpredict)
+gluherringpredict$year<-herring_only2$year
+gluherringpredict<-as.data.frame(gluherringpredict)
+
+gluherringfig<- ggplot() + geom_line(data =gluherringpredict, aes(x = year, y = fit)) +
+  geom_ribbon(data = gluherringpredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#cd3341", alpha=0.3) + geom_point(data = herring_only, aes(x = year, y = glu), color="#cd3341") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
+
+#Herring PHE
 
 
 normalityphe<-glm(phe~year, data = herring_only)
@@ -319,6 +374,20 @@ pheherring<-glmmTMB(phe~ scale(year) + scale(sl) +(1|site) , family = "gaussian"
 summary(pheherring)
 
 
+predict(pheherring, herring_only2, allow.new.levels=TRUE)
+ndpheherring<-herring_only[1,]
+ndpheherring$year<-"new"
+ndpheherring_pop<-data.frame(year=herring_only2$year, site=NA, sl = 146) 
+pheherringpredict<-predict(pheherring, newdata=ndpheherring_pop, se.fit=TRUE)
+as.data.frame(pheherringpredict)
+pheherringpredict$year<-herring_only2$year
+pheherringpredict<-as.data.frame(pheherringpredict)
+
+pheherringfig<- ggplot() + geom_line(data =pheherringpredict, aes(x = year, y = fit)) +
+  geom_ribbon(data = pheherringpredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#cd3341", alpha=0.3) + geom_point(data = herring_only, aes(x = year, y = phe), color="#cd3341") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
+
+#HERRING TP
+
 normalitytp<-glm(tp~year, data = herring_only)
 resherring<-simulateResiduals(fittedModel = normalitytp, n = 250)
 resherring$scaledResiduals
@@ -328,8 +397,6 @@ tpherring<-glmmTMB(tp~ scale(year) + scale(sl) +(1|site), na.action = na.omit, f
 summary(tpherring)
 
 
-diffherring<-glmmTMB(diff~ scale(year) + scale(sl) +(1|site) , family = "gaussian", data= herring_only)
-summary(diffherring)
 library(performance)
 check_collinearity(
   pheherring,
@@ -344,26 +411,23 @@ check_collinearity(
   component = c("all", "conditional", "count", "zi", "zero_inflated"),
   verbose = TRUE)
 
-#lets make a tp figure for herring;find median value first = 142
+#lets make a tp figure for herring;find median value first = 146
 
-#I can't seem to get the herring figure to work! Not "Error in eval(substitute(expr), data, enclos = parent.frame()) : 
-#NAs's causing problems, so I removed them to make the figures only!
-herring_only2<-herring_only %>% 
-  drop_na(site, year, sl) 
+
 
 tpherring<-glmmTMB(tp~ scale(year) + scale(sl) +(1|site), family = "gaussian", data= herring_only2)
 
 predict(tpherring, herring_only2, allow.new.levels=TRUE)
 ndtp<-herring_only2[1,]
 ndtp$year<-"new"
-ndtp_pop<-data.frame(year=herring_only2$year, site=NA, sl = 142) #median = sl
+ndtp_pop<-data.frame(year=herring_only2$year, site=NA, sl = 146) #median = sl
 tppredict<-predict(tpherring, newdata=ndtp_pop, se.fit=TRUE)
 as.data.frame(tppredict)
 tppredict$year<-herring_only2$year
 tppredict<-as.data.frame(tppredict)
 
 tpherringfig<- ggplot() + geom_line(data =tppredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="darkorchid4", alpha=0.3) + geom_point(data = herring_only, aes(x = year, y = tp), color="darkorchid4") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
+  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#cd3341", alpha=0.3) + geom_point(data = herring_only, aes(x = year, y = tp), color="#cd3341") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
 
 
 
@@ -378,6 +442,9 @@ value<-testUniformity(resrock) #normal
 shapiro.test(rock_only$glu)
 glurock<-glmmTMB(glu~ scale(year) + scale(sl) +(1|site) , family = "gaussian", data= rock_only)
 summary(glurock)
+
+intglurock<-glmmTMB(glu~ scale(year)*scale(sl) +(1|site) , family = "gaussian", data= rock_only)
+summary(intglurock)
 
 
 normalityphe<-glm(phe~year, data = rock_only)
@@ -413,7 +480,7 @@ tppredict$year<-rock_only$year
 tppredict<-as.data.frame(tppredict)
 
 tplot1rock<- ggplot() + geom_line(data =tppredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="darkorchid4", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = tp), color="darkorchid4") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic() + theme(axis.title.x = element_blank())
+  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#0077b6", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = tp), color="#0077b6") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic() + theme(axis.title.x = element_blank()) +ggtitle("p = 0.000") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
 
 #make figure for glu
 predict(glurock, rock_only, allow.new.levels=TRUE)
@@ -426,7 +493,7 @@ glupredict$year<-rock_only$year
 glupredict<-as.data.frame(glupredict)
 
 gluplot1rock<- ggplot() + geom_line(data =glupredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = glupredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="olivedrab", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = glu), color="olivedrab") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic() + theme(axis.title.x = element_blank())
+  geom_ribbon(data = glupredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#0077b6", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = glu), color="#0077b6") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic() + theme(axis.title.x = element_blank()) +ggtitle("p = 0.000") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
 
 #make figure for phe
 predict(pherock, rock_only, allow.new.levels=TRUE)
@@ -439,26 +506,61 @@ phepredict$year<-rock_only$year
 phepredict<-as.data.frame(phepredict)
 
 pheplot1rock<- ggplot() + geom_line(data =phepredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = phepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="dodgerblue3", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = phe), color="dodgerblue3") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic() +  theme(axis.title.x = element_blank())
+  geom_ribbon(data = phepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#0077b6", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = phe), color="#0077b6") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic() +  theme(axis.title.x = element_blank()) +ggtitle("p = 0.405") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
 
 library(patchwork)
 rockfig<-tplot1rock| gluplot1rock / pheplot1rock 
+rockfig1<- rockfig +  plot_annotation(title = "                       Copper Rockfish") 
 ggsave("fig3.jpg")
 
 
 library(ggeasy)
-tpfig<-ggarrange(tphakefig + ggtitle("Pacific Hake") + easy_center_title()
+tpfig<-ggarrange(tphakefig + ggtitle("Pacific Hake \n p = 0.416") + easy_center_title()
  +theme(axis.title = element_blank() ),
-                 tppollockfig +ggtitle("Walleye Pollock")+ easy_center_title()+
+                 tppollockfig +ggtitle("Walleye Pollock \n p = 0.975")+ easy_center_title()+
 theme(axis.title = element_blank()),
-                 tpsolefig + ggtitle("English Sole")+ easy_center_title()
+                 tpsolefig + ggtitle("English Sole \n p = 0.443")+ easy_center_title()
 +theme(axis.title = element_blank()),
-                 tpherringfig+ggtitle("Pacific Herring") + easy_center_title()
+                 tpherringfig+ggtitle("Pacific Herring \n p = 0.842") + easy_center_title()
 +theme(axis.title = element_blank()), 
                  nrow= 2, ncol  = 2)
 library(ggpubr)
 tpfigcomplete<- annotate_figure(tpfig, top = NULL, bottom = "Year collected", left = "Trophic position")
 ggsave("figure2.jpg")                               
+
+
+glufig<-ggarrange(gluhakefig + ggtitle("Pacific Hake \n p = 0.993") + easy_center_title()
+                 +theme(axis.title = element_blank() ),
+                 glupollockfig +ggtitle("Walleye Pollock \n p = 0.435")+ easy_center_title()+
+                   theme(axis.title = element_blank()),
+                glusolefig + ggtitle("English Sole \n p = 0.998")+ easy_center_title()
+                 +theme(axis.title = element_blank()),
+                gluherringfig+ggtitle("Pacific Herring \n p = 0.285") + easy_center_title()
+                 +theme(axis.title = element_blank()), 
+                 nrow= 2, ncol  = 2) + xlab("Year collected") + ylab("Glutamic Acid (in ‰)")
+glufigsupp<-annotate_figure(
+  glufig,
+  bottom = "Year Collected",
+  left = "Glutamic Acid (in ‰)")
+ggsave("glufigsupp.jpg")
+
+phefig<-ggarrange(phehakefig + ggtitle("Pacific Hake \n p = 0.361") + easy_center_title()
+                  +theme(axis.title = element_blank() ),
+                  phepollockfig +ggtitle("Walleye Pollock \n p = 0.320")+ easy_center_title()+
+                    theme(axis.title = element_blank()),
+                  phesolefig + ggtitle("English Sole \n p = 0.125")+ easy_center_title()
+                  +theme(axis.title = element_blank()),
+                  pheherringfig+ggtitle("Pacific Herring \n p = 0.127") + easy_center_title()
+                  +theme(axis.title = element_blank()), 
+                  nrow= 2, ncol  = 2) + xlab("Year collected") + ylab("Phenylanaine(in ‰)")
+phefigsupp<-annotate_figure(
+  phefig,
+  bottom = "Year Collected",
+  left = "Phenylalanine (in ‰)")
+ggsave("phefigsupp.jpg")
+
+
+
 
 #make data tables
 library(kableExtra)
@@ -497,6 +599,8 @@ save(glusole, phesole, tpsole, gluhake, phehake, tphake, glupollock, phepollock,
 library(mgcv) #a package to run GAMS
 library(mgcViz) #a package to plot GAMS
 allspp$site<-as.factor(allspp$site)
+rock_only$site<-as.factor(rock_only$site)
+
 
 phemodgam<-gam(phe~ s(year,k=4)+ sl + s(site,bs="re"), data=rock_only, method="REML")
 summary(phemodgam)
