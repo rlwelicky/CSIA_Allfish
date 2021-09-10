@@ -110,8 +110,7 @@ as.data.frame(glusolepredict)
 glusolepredict$year<-sole_only$year
 glusolepredict<-as.data.frame(glusolepredict)
 
-glusolefig<- ggplot() + geom_line(data =glusolepredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = glusolepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#5445b1", alpha=0.3) + geom_point(data = sole_only, aes(x = year, y = glu), color="#5445b1") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
+glusolefig<- ggplot() + geom_point(data = sole_only, aes(x = year, y = glu), color="#5445b1") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)")  +theme_classic()
 
 
 #SOLE PHE
@@ -136,8 +135,7 @@ as.data.frame(phesolepredict)
 phesolepredict$year<-sole_only$year
 phesolepredict<-as.data.frame(phesolepredict)
 
-phesolefig<- ggplot() + geom_line(data =phesolepredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = phesolepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#5445b1", alpha=0.3) + geom_point(data = sole_only, aes(x = year, y = phe), color="#5445b1") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
+phesolefig<- ggplot() + geom_point(data = sole_only, aes(x = year, y = phe), color="#5445b1") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
 
 #SOLE TP
 
@@ -158,8 +156,7 @@ as.data.frame(tpsolepredict)
 tpsolepredict$year<-sole_only$year
 tpsolepredict<-as.data.frame(tpsolepredict)
 
-tpsolefig<- ggplot() + geom_line(data =tpsolepredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tpsolepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#5445b1", alpha=0.3) + geom_point(data = sole_only, aes(x = year, y = tp), color="#5445b1") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
+tpsolefig<- ggplot()  + geom_point(data = sole_only, aes(x = year, y = tp), color="#5445b1") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
 
 
 
@@ -195,8 +192,7 @@ as.data.frame(gluhakepredict)
 gluhakepredict$year<-hake_only$year
 gluhakepredict<-as.data.frame(gluhakepredict)
 
-gluhakefig<- ggplot() + geom_line(data =gluhakepredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = gluhakepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#f3c483", alpha=0.3) + geom_point(data = hake_only, aes(x = year, y = glu), color="#f3c483") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
+gluhakefig<- ggplot()  + geom_point(data = hake_only, aes(x = year, y = glu), color="#f3c483") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
 
 #HAKE PHE
 
@@ -218,8 +214,7 @@ as.data.frame(phehakepredict)
 phehakepredict$year<-hake_only$year
 phehakepredict<-as.data.frame(phehakepredict)
 
-phehakefig<- ggplot() + geom_line(data =phehakepredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = phehakepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#f3c483", alpha=0.3) + geom_point(data = hake_only, aes(x = year, y = phe), color="#f3c483") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
+phehakefig<- ggplot()  + geom_point(data = hake_only, aes(x = year, y = phe), color="#f3c483") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
 
 #HAKE TP
 normalitytp<-glm(tp~year, data = hake_only)
@@ -240,8 +235,7 @@ as.data.frame(tphakepredict)
 tphakepredict$year<-hake_only$year
 tphakepredict<-as.data.frame(tphakepredict)
 
-tphakefig<- ggplot() + geom_line(data =tphakepredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tphakepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#f3c483", alpha=0.3) + geom_point(data = hake_only, aes(x = year, y = tp), color="#f3c483") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
+tphakefig<- ggplot() + geom_point(data = hake_only, aes(x = year, y = tp), color="#f3c483") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
 
 #Analyses for only pollock
 pollock_only<-allspp%>%
@@ -272,8 +266,7 @@ as.data.frame(glupollockpredict)
 glupollockpredict$year<-pollock_only$year
 glupollockpredict<-as.data.frame(glupollockpredict)
 
-glupollockfig<- ggplot() + geom_line(data =glupollockpredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = glupollockpredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#5c1a33", alpha=0.3) + geom_point(data = pollock_only, aes(x = year, y = glu), color="#5c1a33") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
+glupollockfig<- ggplot()  + geom_point(data = pollock_only, aes(x = year, y = glu), color="#5c1a33") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
 
 #POLLOCK PHE
 
@@ -295,8 +288,7 @@ as.data.frame(phepollockpredict)
 phepollockpredict$year<-pollock_only$year
 phepollockpredict<-as.data.frame(phepollockpredict)
 
-phepollockfig<- ggplot() + geom_line(data =phepollockpredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = phepollockpredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#5c1a33", alpha=0.3) + geom_point(data = pollock_only, aes(x = year, y = phe), color="#5c1a33") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
+phepollockfig<- ggplot() +  geom_point(data = pollock_only, aes(x = year, y = phe), color="#5c1a33") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
 
 
 #Polock TP
@@ -320,8 +312,7 @@ as.data.frame(tppollockpredict)
 tppollockpredict$year<-pollock_only$year
 tppollockpredict<-as.data.frame(tppollockpredict)
 
-tppollockfig<- ggplot() + geom_line(data =tppollockpredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tppollockpredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#5c1a33", alpha=0.3) + geom_point(data = pollock_only, aes(x = year, y = tp), color="#5c1a33") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
+tppollockfig<- ggplot() + geom_point(data = pollock_only, aes(x = year, y = tp), color="#5c1a33") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
 
 #Analyses for only herring
 herring_only<-allspp%>%
@@ -359,8 +350,7 @@ as.data.frame(gluherringpredict)
 gluherringpredict$year<-herring_only2$year
 gluherringpredict<-as.data.frame(gluherringpredict)
 
-gluherringfig<- ggplot() + geom_line(data =gluherringpredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = gluherringpredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#cd3341", alpha=0.3) + geom_point(data = herring_only, aes(x = year, y = glu), color="#cd3341") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
+gluherringfig<- ggplot() + geom_point(data = herring_only, aes(x = year, y = glu), color="#cd3341") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
 
 #Herring PHE
 
@@ -383,8 +373,7 @@ as.data.frame(pheherringpredict)
 pheherringpredict$year<-herring_only2$year
 pheherringpredict<-as.data.frame(pheherringpredict)
 
-pheherringfig<- ggplot() + geom_line(data =pheherringpredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = pheherringpredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#cd3341", alpha=0.3) + geom_point(data = herring_only, aes(x = year, y = phe), color="#cd3341") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
+pheherringfig<- ggplot()  + geom_point(data = herring_only, aes(x = year, y = phe), color="#cd3341") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
 
 #HERRING TP
 
@@ -426,8 +415,7 @@ as.data.frame(tppredict)
 tppredict$year<-herring_only2$year
 tppredict<-as.data.frame(tppredict)
 
-tpherringfig<- ggplot() + geom_line(data =tppredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#cd3341", alpha=0.3) + geom_point(data = herring_only, aes(x = year, y = tp), color="#cd3341") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
+tpherringfig<- ggplot() + geom_point(data = herring_only, aes(x = year, y = tp), color="#cd3341") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
 
 
 
@@ -445,6 +433,9 @@ summary(glurock)
 
 intglurock<-glmmTMB(glu~ scale(year)*scale(sl) +(1|site) , family = "gaussian", data= rock_only)
 summary(intglurock)
+
+glurocknoscale<-glmmTMB(glu~ year + sl +(1|site) , family = "gaussian", data= rock_only)
+summary(glurocknoscale)
 
 
 normalityphe<-glm(phe~year, data = rock_only)
@@ -480,7 +471,7 @@ tppredict$year<-rock_only$year
 tppredict<-as.data.frame(tppredict)
 
 tplot1rock<- ggplot() + geom_line(data =tppredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#0077b6", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = tp), color="#0077b6") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic() + theme(axis.title.x = element_blank()) +ggtitle("p = 0.000") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
+  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#0077b6", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = tp), color="#0077b6") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic() + theme(axis.title.x = element_blank()) +ggtitle("p < 0.000") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
 
 #make figure for glu
 predict(glurock, rock_only, allow.new.levels=TRUE)
@@ -493,7 +484,7 @@ glupredict$year<-rock_only$year
 glupredict<-as.data.frame(glupredict)
 
 gluplot1rock<- ggplot() + geom_line(data =glupredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = glupredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#0077b6", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = glu), color="#0077b6") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic() + theme(axis.title.x = element_blank()) +ggtitle("p = 0.000") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
+  geom_ribbon(data = glupredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#0077b6", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = glu), color="#0077b6") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic() + theme(axis.title.x = element_blank()) +ggtitle("p < 0.000") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
 
 #make figure for phe
 predict(pherock, rock_only, allow.new.levels=TRUE)
@@ -505,8 +496,7 @@ as.data.frame(phepredict)
 phepredict$year<-rock_only$year
 phepredict<-as.data.frame(phepredict)
 
-pheplot1rock<- ggplot() + geom_line(data =phepredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = phepredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#0077b6", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = phe), color="#0077b6") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic() +  theme(axis.title.x = element_blank()) +ggtitle("p = 0.405") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
+pheplot1rock<- ggplot() + geom_point(data = rock_only, aes(x = year, y = phe), color="#0077b6") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic() +  theme(axis.title.x = element_blank()) +ggtitle("p < 0.405") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
 
 library(patchwork)
 rockfig<-tplot1rock| gluplot1rock / pheplot1rock 
@@ -515,13 +505,13 @@ ggsave("fig3.jpg")
 
 
 library(ggeasy)
-tpfig<-ggarrange(tphakefig + ggtitle("Pacific Hake \n p = 0.416") + easy_center_title()
+tpfig<-ggarrange(tphakefig + ggtitle("Pacific Hake \n p < 0.416") + easy_center_title()
  +theme(axis.title = element_blank() ),
-                 tppollockfig +ggtitle("Walleye Pollock \n p = 0.975")+ easy_center_title()+
+                 tppollockfig +ggtitle("Walleye Pollock \n p < 0.975")+ easy_center_title()+
 theme(axis.title = element_blank()),
-                 tpsolefig + ggtitle("English Sole \n p = 0.443")+ easy_center_title()
+                 tpsolefig + ggtitle("English Sole \n p < 0.443")+ easy_center_title()
 +theme(axis.title = element_blank()),
-                 tpherringfig+ggtitle("Pacific Herring \n p = 0.842") + easy_center_title()
+                 tpherringfig+ggtitle("Pacific Herring \n p < 0.842") + easy_center_title()
 +theme(axis.title = element_blank()), 
                  nrow= 2, ncol  = 2)
 library(ggpubr)
@@ -529,13 +519,13 @@ tpfigcomplete<- annotate_figure(tpfig, top = NULL, bottom = "Year collected", le
 ggsave("figure2.jpg")                               
 
 
-glufig<-ggarrange(gluhakefig + ggtitle("Pacific Hake \n p = 0.993") + easy_center_title()
+glufig<-ggarrange(gluhakefig + ggtitle("Pacific Hake \n p < 0.993") + easy_center_title()
                  +theme(axis.title = element_blank() ),
-                 glupollockfig +ggtitle("Walleye Pollock \n p = 0.435")+ easy_center_title()+
+                 glupollockfig +ggtitle("Walleye Pollock \n p < 0.435")+ easy_center_title()+
                    theme(axis.title = element_blank()),
-                glusolefig + ggtitle("English Sole \n p = 0.998")+ easy_center_title()
+                glusolefig + ggtitle("English Sole \n p < 0.998")+ easy_center_title()
                  +theme(axis.title = element_blank()),
-                gluherringfig+ggtitle("Pacific Herring \n p = 0.285") + easy_center_title()
+                gluherringfig+ggtitle("Pacific Herring \n p < 0.285") + easy_center_title()
                  +theme(axis.title = element_blank()), 
                  nrow= 2, ncol  = 2) + xlab("Year collected") + ylab("Glutamic Acid (in ‰)")
 glufigsupp<-annotate_figure(
@@ -544,13 +534,13 @@ glufigsupp<-annotate_figure(
   left = "Glutamic Acid (in ‰)")
 ggsave("glufigsupp.jpg")
 
-phefig<-ggarrange(phehakefig + ggtitle("Pacific Hake \n p = 0.361") + easy_center_title()
+phefig<-ggarrange(phehakefig + ggtitle("Pacific Hake \n p < 0.361") + easy_center_title()
                   +theme(axis.title = element_blank() ),
-                  phepollockfig +ggtitle("Walleye Pollock \n p = 0.320")+ easy_center_title()+
+                  phepollockfig +ggtitle("Walleye Pollock \n p < 0.320")+ easy_center_title()+
                     theme(axis.title = element_blank()),
-                  phesolefig + ggtitle("English Sole \n p = 0.125")+ easy_center_title()
+                  phesolefig + ggtitle("English Sole \n p < 0.125")+ easy_center_title()
                   +theme(axis.title = element_blank()),
-                  pheherringfig+ggtitle("Pacific Herring \n p = 0.127") + easy_center_title()
+                  pheherringfig+ggtitle("Pacific Herring \n p < 0.127") + easy_center_title()
                   +theme(axis.title = element_blank()), 
                   nrow= 2, ncol  = 2) + xlab("Year collected") + ylab("Phenylanaine(in ‰)")
 phefigsupp<-annotate_figure(
