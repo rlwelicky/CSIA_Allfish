@@ -475,7 +475,7 @@ tppredict$year<-rock_only$year
 tppredict<-as.data.frame(tppredict)
 
 tplot1rock<- ggplot() + geom_line(data =tppredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#0077b6", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = tp), color="#0077b6") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic() + theme(axis.title.x = element_blank()) +ggtitle("p < 0.001") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
+  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#0077b6", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = tp), color="#0077b6") + ylab("Trophic position") + xlab("Year collected") +theme_classic() +ggtitle("p < 0.001") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
 
 #make figure for glu
 predict(glurock, rock_only, allow.new.levels=TRUE)
@@ -502,10 +502,14 @@ phepredict<-as.data.frame(phepredict)
 
 pheplot1rock<- ggplot() + geom_point(data = rock_only, aes(x = year, y = phe), color="#0077b6") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic() +  theme(axis.title.x = element_blank()) +ggtitle("p = 0.405") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
 
-library(patchwork)
-rockfig<-tplot1rock| gluplot1rock / pheplot1rock 
-rockfig1<- rockfig +  plot_annotation(title = "                               Copper Rockfish") 
 
+
+library(patchwork)
+library(ggpubr)
+library(gridExtra)
+library(plotly)
+rockfig<-(gluplot1rock | pheplot1rock) / tplot1rock 
+rockfigcomplete<-rockfig + plot_annotation(title = "Copper Rockfish",  theme = theme(plot.title = element_text(hjust = 0.5))) 
 ggsave("fig3.jpg")
 
 
