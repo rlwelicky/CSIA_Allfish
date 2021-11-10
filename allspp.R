@@ -670,17 +670,44 @@ pollockn<-pollock_only%>%
 
 haken<-hake_only%>%
   group_by(decade)%>%
+  drop_na(decade)%>%
   summarize(
-    fishcount = n_distinct(hostid, na.rm = TRUE))
+    species = "hake",
+    fishcount = n_distinct(hostid, na.rm = TRUE),
+    avg.tp = mean(tp),
+    sqn.tp = fishcount-1,
+    se.tp = avg.tp/(sqrt(sqn.tp)))
 
 herringn<-herring_only%>%
   group_by(decade)%>%
-  drop_na(decade)%>%
+  #drop_na(decade)%>%
   summarize(
-    fishcount = n_distinct(hostid, na.rm = TRUE))
+    species = "herring",
+    fishcount = n_distinct(hostid, na.rm = TRUE),
+    avg.tp = mean(tp),
+    sqn.tp = fishcount-1,
+    se.tp = avg.tp/(sqrt(sqn.tp)))
+
+allspp<-as.data.frame(allspp)
+
+alldescriptive<-allspp%>%
+  group_by(hostsp, decade)%>%
+  drop_na(tp)%>%
+  summarize(
+    fishcount = n_distinct(hostid, na.rm = TRUE),
+    avg.tp = mean(tp),
+    sqn.tp = fishcount-1,
+    se.tp = avg.tp/(sqrt(sqn.tp)),
+    avg.glu = mean(glu),
+    se.glu = avg.glu/(sqrt(sqn.tp)),
+    avg.phe = mean(phe),
+    se.phe= avg.phe/(sqrt(sqn.tp))) %>%
+  filter(fishcount >2)
+
+write.csv(alltp, "alldescriptive.csv")
 
 
-
+library(tidyverse)
 
 write.csv(fishstats2, "decadesamplesize.csv")
 
