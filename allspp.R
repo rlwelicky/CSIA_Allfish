@@ -26,7 +26,7 @@ speciescombined<-bind_rows(hake,herring, pollock, sole,rock,reruns)
 #I need to make a column of final values for each AA for indiv analysis. # I included this values_fn statement because if there are duplicate samples, we don't know which best, so we will take the average of the duplicate.
 allspp<-speciescombined%>%
   filter(!is.na(c(finalvalue)))%>%
-  pivot_wider(id_cols = c(hostid, hostsp, sl, tl, lat, long, year, decade, lag0_temp, lag1_temp, lag2_temp, lag3_temp, lag12_temp), names_from = AA, values_from = finalvalue)
+  pivot_wider(id_cols = c(hostid, hostsp, sl, tl, lat, long, date_collected,year, decade, lag0_temp, lag1_temp, lag2_temp, lag3_temp, lag12_temp), names_from = AA, values_from = finalvalue)
 duplicated(allspp$hostid)#there are a few duplicated but its ok, bc one of the duplicate doensn't have glu and phe so it won't be used anyways
 #I need to make one variable called site using lat and long
 allspp$latjitt<-jitter(allspp$lat, factor=0.1, amount=NULL)
@@ -34,9 +34,10 @@ allspp$longjitt<-jitter(allspp$long, factor=0.1, amount=0)
 allspp$site=paste(allspp$lat,allspp$long, na.rm = TRUE)
 #c need to reate a column of trophic position calculations
 
-allspp$tp=(((allspp$glu-allspp$phe-3.4)/7.6)+1)
+allspp$tp=(((allspp$glu-allspp$phe-3.6)/5.7)+1)
 allspp$diff=(allspp$glu-allspp$phe)
 
+write.csv(allspp, "allsp.seasonal.csv")
 
 a<-allspp%>%
   group_by(hostsp, na.rm = TRUE)%>% 
@@ -46,7 +47,6 @@ a<-allspp%>%
             sdsl = sd(sl, na.rm = TRUE),
             mediansl = median(sl, na.rm = TRUE),
             fishcount = n_distinct(hostid, na.rm = TRUE),
-      
             averagetp = mean (tp, na.rm = TRUE))
 
 
@@ -65,7 +65,7 @@ spatialtest.allspp<-testSpatialAutocorrelation(simulationOutput = simspatial.all
 spatialtest.allspp #Yay, no spatial corr
 
 
-#temporal checks for glutamic acid, his would be the same as phe or tp, since all these values are from 1 fish from the same site
+#temporal checks for glutamic acid, this would be the same as phe or tp, since all these values are from 1 fish from the same site
 
 allspp$timegroup<-allspp$year
 temporal.glu<-glm(glu~year, data= allspp)
@@ -73,9 +73,17 @@ temporaltest.glu<-dwtest(temporal.glu, order.by = NULL, alternative = "two.sided
 temporaltest.glu #yay, no temporal corr
 dwtest(temporal.glu)
 
+#check for seasonality temporal autocorr
+seasoncheck<-read.csv("allsp.seasonal.csv")
+seasoncheck$timegroup<-seasoncheck$month.cat
+temporal.glu<-glm(glu~month.cat, data=seasoncheck)
+temporaltest.glu<-dwtest(temporal.glu, order.by = NULL, alternative = "two.sided", exact = FALSE, tol = 1e-10) 
+temporaltest.glu #yay, no temporal corr
+dwtest(temporal.glu)
 
-
-
+seasoncheck$month.num<-as.factor(seasoncheck$month.num)
+seasonreg<-glm(month.num~year, data = seasoncheck)
+summary(seasonreg)
 #Analyses for only Sole
 
 sole_only<-allspp%>%
@@ -96,7 +104,7 @@ ressole<-simulateResiduals(fittedModel = normalityglu, n = 250)
 ressole$scaledResiduals
 plot(ressole)
 testUniformity(ressole) #glu is normally distributed
-glusole<-glmmTMB(glu~ scale(year) + scale(sl) +(1|site)  , family = "gaussian", data= sole_only)
+glusole<-glmmTMB(glu~ scale(year) + scale(sl) +(1|site) + month.cat , family = "gaussian", data= sole_only)
 summary(glusole)
 
 
@@ -110,7 +118,7 @@ as.data.frame(glusolepredict)
 glusolepredict$year<-sole_only$year
 glusolepredict<-as.data.frame(glusolepredict)
 
-glusolefig<- ggplot() + geom_point(data = sole_only, aes(x = year, y = glu), color="#5445b1") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)")  +theme_classic()
+glusolefig<- ggplot() + geom_point(data = sole_only, aes(x = year, y = glu), color="#5445b1") +  xlab("") + ylab("")  +theme_classic()
 
 
 #SOLE PHE
@@ -123,8 +131,11 @@ testUniformity(ressole)#phe is normally distrbuted
 
 phesole<-glmmTMB(phe~ scale(year) + scale(sl) +(1|site), family = "gaussian", data= sole_only)
 summary(phesole)
-
-
+#m2<-lmer(phe~ scale(year) + scale(sl) +(1|site),  data= sole_only)
+#m1<-update(m2,.~ (1|site))
+#m0<-lm (phe~year, sole_only)
+#m00<-lm(phe~sl, sole_only)
+#anova(m2,m1,m0,m00)
 
 predict(phesole, sole_only, allow.new.levels=TRUE)
 ndphesole<-sole_only[1,]
@@ -135,7 +146,7 @@ as.data.frame(phesolepredict)
 phesolepredict$year<-sole_only$year
 phesolepredict<-as.data.frame(phesolepredict)
 
-phesolefig<- ggplot() + geom_point(data = sole_only, aes(x = year, y = phe), color="#5445b1") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
+phesolefig<- ggplot() + geom_point(data = sole_only, aes(x = year, y = phe), color="#5445b1") +  xlab("") + ylab("") +theme_classic()
 
 #SOLE TP
 
@@ -156,7 +167,7 @@ as.data.frame(tpsolepredict)
 tpsolepredict$year<-sole_only$year
 tpsolepredict<-as.data.frame(tpsolepredict)
 
-tpsolefig<- ggplot()  + geom_point(data = sole_only, aes(x = year, y = tp), color="#5445b1") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
+tpsolefig<- ggplot()  + geom_point(data = sole_only, aes(x = year, y = tp), color="#5445b1") +  xlab("") + ylab("") +theme_classic()
 
 
 
@@ -192,7 +203,7 @@ as.data.frame(gluhakepredict)
 gluhakepredict$year<-hake_only$year
 gluhakepredict<-as.data.frame(gluhakepredict)
 
-gluhakefig<- ggplot()  + geom_point(data = hake_only, aes(x = year, y = glu), color="#f3c483") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
+gluhakefig<- ggplot()  + geom_point(data = hake_only, aes(x = year, y = glu), color="#f3c483") +  xlab("") + ylab("") +theme_classic()
 
 #HAKE PHE
 
@@ -214,7 +225,7 @@ as.data.frame(phehakepredict)
 phehakepredict$year<-hake_only$year
 phehakepredict<-as.data.frame(phehakepredict)
 
-phehakefig<- ggplot()  + geom_point(data = hake_only, aes(x = year, y = phe), color="#f3c483") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
+phehakefig<- ggplot()  + geom_point(data = hake_only, aes(x = year, y = phe), color="#f3c483") +  xlab("") + ylab("") +theme_classic()
 
 #HAKE TP
 normalitytp<-glm(tp~year, data = hake_only)
@@ -235,7 +246,7 @@ as.data.frame(tphakepredict)
 tphakepredict$year<-hake_only$year
 tphakepredict<-as.data.frame(tphakepredict)
 
-tphakefig<- ggplot() + geom_point(data = hake_only, aes(x = year, y = tp), color="#f3c483") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
+tphakefig<- ggplot() + geom_point(data = hake_only, aes(x = year, y = tp), color="#f3c483") +  xlab("") + ylab("") +theme_classic()
 
 #Analyses for only pollock
 pollock_only<-allspp%>%
@@ -266,7 +277,7 @@ as.data.frame(glupollockpredict)
 glupollockpredict$year<-pollock_only$year
 glupollockpredict<-as.data.frame(glupollockpredict)
 
-glupollockfig<- ggplot()  + geom_point(data = pollock_only, aes(x = year, y = glu), color="#5c1a33") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
+glupollockfig<- ggplot()  + geom_point(data = pollock_only, aes(x = year, y = glu), color="#5c1a33") +  xlab("") + ylab("") +theme_classic()
 
 #POLLOCK PHE
 
@@ -288,7 +299,7 @@ as.data.frame(phepollockpredict)
 phepollockpredict$year<-pollock_only$year
 phepollockpredict<-as.data.frame(phepollockpredict)
 
-phepollockfig<- ggplot() +  geom_point(data = pollock_only, aes(x = year, y = phe), color="#5c1a33") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
+phepollockfig<- ggplot() +  geom_point(data = pollock_only, aes(x = year, y = phe), color="#5c1a33") +  xlab("") + ylab("") +theme_classic()
 
 
 #Polock TP
@@ -312,11 +323,12 @@ as.data.frame(tppollockpredict)
 tppollockpredict$year<-pollock_only$year
 tppollockpredict<-as.data.frame(tppollockpredict)
 
-tppollockfig<- ggplot() + geom_point(data = pollock_only, aes(x = year, y = tp), color="#5c1a33") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
+tppollockfig<- ggplot() + geom_point(data = pollock_only, aes(x = year, y = tp), color="#5c1a33") +  xlab("") + ylab("") +theme_classic()
 
 #Analyses for only herring
 herring_only<-allspp%>%
   filter(hostsp == "herring")
+
 
 #find median value first = 146
 herring_only %>%
@@ -350,7 +362,7 @@ as.data.frame(gluherringpredict)
 gluherringpredict$year<-herring_only2$year
 gluherringpredict<-as.data.frame(gluherringpredict)
 
-gluherringfig<- ggplot() + geom_point(data = herring_only, aes(x = year, y = glu), color="#cd3341") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic()
+gluherringfig<- ggplot() + geom_point(data = herring_only, aes(x = year, y = glu), color="#cd3341") +  xlab("") + ylab("") +theme_classic()
 
 #Herring PHE
 
@@ -373,7 +385,7 @@ as.data.frame(pheherringpredict)
 pheherringpredict$year<-herring_only2$year
 pheherringpredict<-as.data.frame(pheherringpredict)
 
-pheherringfig<- ggplot()  + geom_point(data = herring_only, aes(x = year, y = phe), color="#cd3341") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic()
+pheherringfig<- ggplot()  + geom_point(data = herring_only, aes(x = year, y = phe), color="#cd3341") +  xlab("") + ylab("") +theme_classic()
 
 #HERRING TP
 
@@ -415,7 +427,7 @@ as.data.frame(tppredict)
 tppredict$year<-herring_only2$year
 tppredict<-as.data.frame(tppredict)
 
-tpherringfig<- ggplot() + geom_point(data = herring_only, aes(x = year, y = tp), color="#cd3341") +  xlab("Year collected") + ylab("Trophic Position") +theme_classic()
+tpherringfig<- ggplot() + geom_point(data = herring_only, aes(x = year, y = tp), color="#cd3341") +  xlab("") + ylab("") +theme_classic()
 
 
 
@@ -475,7 +487,7 @@ tppredict$year<-rock_only$year
 tppredict<-as.data.frame(tppredict)
 
 tplot1rock<- ggplot() + geom_line(data =tppredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#0077b6", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = tp), color="#0077b6") + ylab("Trophic position") + xlab("Year collected") +theme_classic() +ggtitle("p < 0.001") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
+  geom_ribbon(data = tppredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#0077b6", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = tp), color="#0077b6") + ylab("Trophic position") + xlab("Year collected") +theme_classic()  + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
 
 #make figure for glu
 predict(glurock, rock_only, allow.new.levels=TRUE)
@@ -488,7 +500,7 @@ glupredict$year<-rock_only$year
 glupredict<-as.data.frame(glupredict)
 
 gluplot1rock<- ggplot() + geom_line(data =glupredict, aes(x = year, y = fit)) +
-  geom_ribbon(data = glupredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#0077b6", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = glu), color="#0077b6") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic() + theme(axis.title.x = element_blank()) +ggtitle("p < 0.001") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
+  geom_ribbon(data = glupredict, aes(x = year, ymin = fit-se.fit, ymax = fit+se.fit), fill="#0077b6", alpha=0.3) + geom_point(data = rock_only, aes(x = year, y = glu), color="#0077b6") +  xlab("Year collected") + ylab("Glutamic acid (in ‰)") +theme_classic() + theme(axis.title.x = element_blank())  + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
 
 #make figure for phe
 predict(pherock, rock_only, allow.new.levels=TRUE)
@@ -500,7 +512,7 @@ as.data.frame(phepredict)
 phepredict$year<-rock_only$year
 phepredict<-as.data.frame(phepredict)
 
-pheplot1rock<- ggplot() + geom_point(data = rock_only, aes(x = year, y = phe), color="#0077b6") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic() +  theme(axis.title.x = element_blank()) +ggtitle("p = 0.405") + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
+pheplot1rock<- ggplot() + geom_point(data = rock_only, aes(x = year, y = phe), color="#0077b6") +  xlab("Year collected") + ylab("Phenylalanine (in ‰)") +theme_classic() +  theme(axis.title.x = element_blank())  + theme(plot.title = element_text(vjust = -5, hjust = 0.05))
 
 
 
@@ -509,8 +521,7 @@ library(ggpubr)
 library(gridExtra)
 library(plotly)
 rockfig<-(gluplot1rock | pheplot1rock) / tplot1rock 
-rockfigcomplete<-rockfig + plot_annotation(title = "Copper Rockfish",  theme = theme(plot.title = element_text(hjust = 0.5))) 
-ggsave("fig3.jpg")
+ggsave("rockfishfig.pdf", height = 11.5, unit = "in")
 
 
 library(ggeasy)
@@ -523,25 +534,31 @@ theme(axis.title = element_blank()),
                  tpherringfig+ggtitle("Pacific Herring \n p = 0.842") + easy_center_title()
 +theme(axis.title = element_blank()), 
                  nrow= 2, ncol  = 2)
+
+tpfigrev<-ggarrange(tpherringfig, tpsolefig, tppollockfig, tphakefig, labels = c('A', 'B', 'C', 'D'))
+tpfigrev2<-annotate_figure(tpfigrev, top = NULL, bottom = "Year collected", left = "Trophic position")
+ggsave("tpfig.pdf",dpi = 300) # for some reason unit labels appear as '...', i saved from export, and it was okay.
+
+
 library(ggpubr)
-tpfigcomplete<- annotate_figure(tpfig, top = NULL, bottom = "Year collected", left = "Trophic position")
-ggsave("figure2.jpg")                               
 
 
-glufig<-ggarrange(gluhakefig + ggtitle("Pacific Hake \n p = 0.993") + easy_center_title()
-                 +theme(axis.title = element_blank() ),
-                 glupollockfig +ggtitle("Walleye Pollock \n p = 0.435")+ easy_center_title()+
-                   theme(axis.title = element_blank()),
-                glusolefig + ggtitle("English Sole \n p = 0.998")+ easy_center_title()
-                 +theme(axis.title = element_blank()),
-                gluherringfig+ggtitle("Pacific Herring \n p = 0.285") + easy_center_title()
-                 +theme(axis.title = element_blank()), 
-                 nrow= 2, ncol  = 2) + xlab("Year collected") + ylab("Glutamic Acid (in ‰)")
-glufigsupp<-annotate_figure(
-  glufig,
-  bottom = "Year Collected",
-  left = "Glutamic Acid (in ‰)")
-ggsave("glufigsupp.jpg")
+glufig<-ggarrange(gluherringfig,glusolefig,glupollockfig,gluhakefig, labels = c('A', 'B', 'C', 'D'))
+                glufigrev<-annotate_figure(glufig, top = NULL, bottom = "Year collected", left = "Glutamic acid (in ‰)")
+ggsave("glufig.pdf", dpi = 300)    
+
+
+phefig<-ggarrange(pheherringfig,phesolefig,phepollockfig,phehakefig, labels = c('A', 'B', 'C', 'D'))
+phefigrev<-annotate_figure(phefig, top = NULL, bottom = "Year collected", left = "Phenylalanine (in ‰)")
+ggsave("phefig.pdf", dpi = 300)               
+
+             
+             
+#glufigsupp<-annotate_figure(
+ # glufig,
+  #bottom = "Year Collected",
+  #left = "Glutamic Acid (in ‰)")
+#ggsave("glufigsupp.jpg")
 
 phefig<-ggarrange(phehakefig + ggtitle("Pacific Hake \n p = 0.361") + easy_center_title()
                   +theme(axis.title = element_blank() ),
@@ -637,18 +654,28 @@ fishstatsdecade<-allspp%>%
     avgglu = mean(glu, na.rm = TRUE), 
     sdglu = sd (glu, na.rm = TRUE),
     avgphe = mean(phe, na.rm = TRUE),
-    sdphe = sd(phe, na.rm = TRUE))
+    sdphe = sd(phe, na.rm = TRUE),
+    fishcount = n_distinct(hostid, na.rm = TRUE),
+    meansl = mean(sl, na.rm = TRUE),
+    sdsl= sd(sl, na.rm = TRUE))
 write.csv(fishstats, "descriptiveresultstablebydecade.csv")
 
+
+library(ggplot2)
+samplesizeandslfig<- ggplot(fishstatsdecade, aes( x= decade, y = meansl, fill = hostsp$hake)) + geom_bar(stat = "identity")
+library(plotrix)
 fishstatsoverall<-allspp%>%
   group_by(hostsp)%>%
   summarize(
+    fishcount = n_distinct(hostid, na.rm = TRUE),
     meantp = mean(tp, na.rm = TRUE),
     tpsd = sd(tp, na.rm = TRUE),
     avgglu = mean(glu, na.rm = TRUE), 
     sdglu = sd (glu, na.rm = TRUE),
     avgphe = mean(phe, na.rm = TRUE),
-    sdphe = sd(phe, na.rm = TRUE))
+    sdphe = sd(phe, na.rm = TRUE),
+    sqn.tp = fishcount-1,
+    se.tp = meantp/(sqrt(sqn.tp)))
 write.csv(fishstats, "descriptiveresultstableoverall.csv")
 
 
@@ -680,7 +707,7 @@ haken<-hake_only%>%
 
 herringn<-herring_only%>%
   group_by(decade)%>%
-  #drop_na(decade)%>%
+  drop_na(decade)%>%
   summarize(
     species = "herring",
     fishcount = n_distinct(hostid, na.rm = TRUE),
@@ -696,6 +723,7 @@ alldescriptive<-allspp%>%
   summarize(
     fishcount = n_distinct(hostid, na.rm = TRUE),
     avg.tp = mean(tp),
+    sd.tp = sd(tp),
     sqn.tp = fishcount-1,
     se.tp = avg.tp/(sqrt(sqn.tp)),
     avg.glu = mean(glu),
@@ -706,6 +734,21 @@ alldescriptive<-allspp%>%
 
 write.csv(alltp, "alldescriptive.csv")
 
+
+
+
+alldescriptive<-allspp%>%
+  group_by(hostsp)%>%
+  drop_na(tp)%>%
+  summarize(
+    fishcount = n_distinct(hostid, na.rm = TRUE),
+    avg.tp = mean(tp),
+    sqn.tp = fishcount-1,
+    se.tp = avg.tp/(sqrt(sqn.tp)),
+    avg.glu = mean(glu),
+    se.glu = avg.glu/(sqrt(sqn.tp)),
+    avg.phe = mean(phe),
+    se.phe= avg.phe/(sqrt(sqn.tp))) 
 
 library(tidyverse)
 
@@ -719,9 +762,92 @@ write.csv(fishstats2, "decadesamplesize.csv")
 library(ggplot2)
 samplesizefig<- ggplot(fishstats2, aes( x= decade, y = fishcount, fill = hostsp, color=hostsp)) + geom_bar()
 
+#make a figure that shows sl by decade with se by fish; wil do each fish alone and then append
+
+herringfig1.dat<-herring_only%>%
+  group_by(decade)%>%
+  summarize(
+    fishcount = n_distinct(hostid, na.rm = TRUE),
+    avg.sl = mean(sl),
+    sd.sl =  sd(sl))
+
+herringfig1.dat$decade<-as.factor(herringfig1.dat$decade)
+herringfig1<- ggplot(herringfig1.dat, aes(x=decade, y=avg.sl)) + 
+  geom_bar(stat="identity", fill="#cd3341")+
+  geom_errorbar(aes(ymin=avg.sl-sd.sl, ymax=avg.sl+sd.sl)) + scale_x_discrete(breaks =c("1900", "1920", "1930", "1940",  "1950", "1960", "1970", "1980", "1990", "2010"),labels=c("1900", "1920", "1930", "1940",  "1950", "1960", "1970", "1980", "1990", "2010")) +xlab("") +ylab("") +theme_classic() 
+
+solefig1.dat<-sole_only%>%
+  group_by(decade)%>%
+  summarize(
+    fishcount = n_distinct(hostid, na.rm = TRUE),
+    avg.sl = mean(sl),
+    sd.sl =  sd(sl))
+
+solefig1.dat$decade<-as.factor(solefig1.dat$decade)
+solefig1<- ggplot(solefig1.dat, aes(x=decade, y=avg.sl)) + 
+  geom_bar(stat="identity", fill="#5445b1")+
+  geom_errorbar(aes(ymin=avg.sl-sd.sl, ymax=avg.sl+sd.sl)) + scale_x_discrete(breaks =c("1930", "1940", "1950", "1960", "1970", "1980", "1990", "2000", "2010"),labels=c("1930", "1940", "1950", "1960", "1970", "1980", "1990", "2000", "2010")) +xlab("") +ylab("") +theme_classic()  
+
+
+pollockfig1.dat<-pollock_only%>%
+  group_by(decade)%>%
+  summarize(
+    fishcount = n_distinct(hostid, na.rm = TRUE),
+    avg.sl = mean(sl),
+    sd.sl =  sd(sl))
+
+pollockfig1.dat$decade<-as.factor(pollockfig1.dat$decade)
+pollockfig1<- ggplot(pollockfig1.dat, aes(x=decade, y=avg.sl)) + 
+  geom_bar(stat="identity", fill="#5c1a33")+
+  geom_errorbar(aes(ymin=avg.sl-sd.sl, ymax=avg.sl+sd.sl)) + scale_x_discrete(breaks =c("1900","1930", "1940", "1950", "1960",  "1980", "1990", "2000", "2010"),labels=c("1900","1930", "1940", "1950", "1960",  "1980", "1990", "2000", "2010")) +xlab("") +ylab("") +theme_classic()  
+
+
+hakefig1.dat<-hake_only%>%
+  group_by(decade)%>%
+  summarize(
+    fishcount = n_distinct(hostid, na.rm = TRUE),
+    avg.sl = mean(sl),
+    sd.sl =  sd(sl))
+
+hakefig1.dat$decade<-as.factor(hakefig1.dat$decade)
+hakefig1<- ggplot(hakefig1.dat, aes(x=decade, y=avg.sl)) + 
+  geom_bar(stat="identity", fill="#f3c483")+
+  geom_errorbar(aes(ymin=avg.sl-sd.sl, ymax=avg.sl+sd.sl)) + scale_x_discrete(breaks =c("1930", "1940", "1950", "1970",  "1980", "1990", "2010"),labels=c("1930", "1940", "1950", "1970",  "1980", "1990", "2010")) +xlab("") +ylab("") +theme_classic()  
+
+
+rockfig1.dat<-rock_only%>%
+  group_by(decade)%>%
+  summarize(
+    fishcount = n_distinct(hostid, na.rm = TRUE),
+    avg.sl = mean(sl),
+    sd.sl =  sd(sl))
+
+rockfig1.dat$decade<-as.factor(rockfig1.dat$decade)
+rockfig1<- ggplot(rockfig1.dat, aes(x=decade, y=avg.sl)) + 
+  geom_bar(stat="identity", fill="#0077b6")+
+  geom_errorbar(aes(ymin=avg.sl-sd.sl, ymax=avg.sl+sd.sl)) + scale_x_discrete(breaks =c("1920","1930", "1940", "1950","1960", "1970",  "1980", "1990", "2000","2010"),labels=c("1920","1930", "1940", "1950","1960", "1970",  "1980", "1990", "2000","2010")) +xlab("") +ylab("") +theme_classic()  
+
+
+
+fig1a<-ggarrange(herringfig1, solefig1, pollockfig1, hakefig1, rockfig1, labels = c('A', 'B', 'C', 'D', 'E'), nrow = 5)
+fig1<-annotate_figure(fig1a, left = "Average standard length (in mm)", bottom = "Decade")
+ggsave("fig1.pdf", dpi = 300)
+
+#samples sizes were inserted above each bar in powerpoint because the hjust and vjust can not be set by individual bar in ggplot and then automaticall adjust in a ggsave
+
 #rockfish glu time series
 library(strucchange)
 ocus.glu<-efp(glurock, type = "Rec-CUSUM", data = rock_only)
 bound.ocus.glu<-boundary(ocus.glu, alpha = 0.1)
 plot(ocus.glu)
 sctest(ocus.glu)
+
+
+
+#herring biomass
+herringbiomass<-read.csv("herring_biomass.csv")
+herringtpbio<-left_join(herring_only, herringbiomass, by  ="year")
+herringtpbio$avg_biomass<-as.numeric(herringtpbio$avg_biomass)
+
+a<-glmmTMB(tp~ scale(avg_biomass) + scale(sl) +(1|site), family = "gaussian", data= herringtpbio)
+summary(a)
